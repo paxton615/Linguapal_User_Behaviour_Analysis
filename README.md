@@ -41,7 +41,7 @@ As one of the funding members, in order to find some answers. I got the permissi
 #### [Findings_and_Conclusions](https://github.com/paxton615/Linguapal-Analysis/tree/master/Findings_and_conclusions)
 
 
-
+The End
 
 
 
