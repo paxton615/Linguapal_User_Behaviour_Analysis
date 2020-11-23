@@ -1,0 +1,964 @@
+
+Data Frames
+import pandas as pd
+import warnings
+warnings.filterwarnings("ignore”) #取消所有warnings
+pd.options.display.max_rows = 5000 (设定能显示的行数)
+pd.options.display.max_columns=100 (设定能显示的列数)
+pd.set_option('precision', 3) （pandas控制小数显示位数）
+np.set_printoptions(precision=3) （numpy控制显示小数的位数）
+
+使用后：[ 0.078 0.48 0.413 0.83]
+np.set_printoptions(suppress=True)  (numpy控制对小数的科学记数法)
+使用后：[ 0. 1.5 1500. ]
+
+从桌面导入csv文件
+（注意：路径中每个单词的大小写，并且，不要忘记 ’ ‘ 号）
+~ 符号代表的是/User/paxton615
+.read_csv( 参数 )
+df_try = pd.read_csv('/Users/paxton615/Desktop/Telco_Customer_Churn.csv’)
+df_try = pd.read_csv('~/Desktop/Telco_Customer_Churn.csv')
+users = pd.read_csv(local_user_file, sep='|', header=None, names=user_cols, index_col='user_id')
+
+index设置
+.set_index( )
+.reset_index( )
+
+user_info.set_index('user_id',drop=True,inplace=True)
+df.reset_index(inplace=True, drop=True) 
+# 重置后，index正常无缺口
+
+
+pd.to_datetime( df[“col"] )
+sf_crime['Dates'] = pd.to_datetime(sf_crime['Dates'])
+sf_crime.head(2)
+sf_crime['Year'] = sf_crime['Dates'].dt.year
+sf_crime['Month'] = sf_crime['Dates'].dt.month
+sf_crime['Day_of_Week'] = sf_crime['Dates'].dt.weekday_name
+sf_crime['Hour'] = sf_crime['Dates'].dt.hour
+sf_crime['Time'] = sf_crime['Dates'].dt.time
+sf_crime['Date'] = sf_crime['Dates'].dt.date
+
+
+pd.get_dummies( data=df, columns=cols)
+注意：原数据最好有备份copy
+df = pd.get_dummies(data=df, columns=multi_cols)
+
+
+从已有的df中选择几个cols组成一个新的df
+mon_tengroup=pd.DataFrame(df, columns=['tenure_group','monthlycharges'])
+
+
+怎么用dict comprehension快速构建dataframe
+column_names = ['height', 'weight', 'is_male']
+values = [[62, 54, 60, 50], [180, 120, 200, 100], [True, False, True, False]]
+df= pd.DataFrame({'hight':values[0],'weight':values[1],'is_male':values[2]})
+df
+df = pd.DataFrame({col:val for col,val in zip(column_names,values)})
+df
+df = pd.DataFrame({col:val for col,val in zip(column_names,values)},
+                 index=range(100,104))
+df
+
+快速建立随机的时间序列data frame
+dates = pd.date_range('1/1/2000', periods=8)
+df = pd.DataFrame(np.random.randn(8, 4),
+  index=dates, columns=['A', 'B', 'C', 'D'])
+                  A         B         C         D
+2000-01-01  0.469112 -0.282863 -1.509059 -1.135632
+2000-01-02  1.212112 -0.173215  0.119209 -1.044236
+2000-01-03 -0.861849 -2.104569 -0.494929  1.071804
+2000-01-04  0.721555 -0.706771 -1.039575  0.271860
+2000-01-05 -0.424972  0.567020  0.276232 -1.087401
+2000-01-06 -0.673690  0.113648 -1.478427  0.524988
+2000-01-07  0.404705  0.577046 -1.715002 -1.039268
+2000-01-08 -0.370647 -1.157892 -1.344312  0.844885
+
+
+将一列中的number与str分离
+创造纯number的col
+和
+纯str的col
+
+返回NaN位置处的index，方便查看不同的type
+df = pd.DataFrame({'Value':['1', 'foo', '1.23', 'bar', '3.14e6']})
+df['Value_Num'] = pd.to_numeric(df['Value'], errors='coerce’) 
+#创造纯熟悉的新col
+mask = pd.notnull(df['Value_Num’]) 
+#用一个mask记录数字的index
+df.loc[mask, 'Value'] = np.nan 
+# 在原col中将mask位置上的数字全部替换为NaN
+df = df.rename(columns={'Value':'Value_Txt’}) #重命名纯str的col
+
+   Value_Txt   Value_Num
+0       NaN        1.00
+1       foo         NaN
+2       NaN        1.23
+3       bar         NaN
+4       NaN  3140000.00
+index_nan = df['Value_Num'].index[df['Value_Num'].apply(np.isnan)]
+index_nan  #返回NaN位置上的index
+
+Int64Index([1, 3], dtype='int64')
+
+
+
+尝试将数字float，把不能float的数字放入一个list中
+
+知道非数字element是什么之后，此例中为” ”， 可以用右边这种指定slicing的方式找到他们row 的 index
+difftype_ones=[]
+for i in df['TotalCharges']:
+    try: 
+        float(i)
+    except:
+        difftype_ones.append(i)
+difftype_ones  #以这样的方式看到所有非float和int的element
+
+[' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
+df[df['TotalCharges']==" "].TotalCharges
+df_try.loc[df_try["TotalCharges"].str.contains(" ")].index
+488 753  936  1082 1340 3331 3826 4380 5218 6670     
+6754 
+
+
+
+模糊搜索str和指定numbers
+.loc[ ] 
+加
+col.str.contains( “” )
+.loc[ ]
+加
+.isin ( [ list ] )
+搜索list中对应的数值，而非一个区间
+
+df_try.loc[df_try["TotalCharges"].str.contains(" ")].index
+Int64Index([488, 753, 936, 1082, 1340, 3331, 3826, 4380, 5218, 6670, 6754], dtype='int64')
+df_try.loc[df_try["tenure"].isin( [10,20,30,40,50,60] ) ]
+
+df_try.loc[df_try["tenure"].isin([10,20,30,40,50,60])][["Partner","tenure"]]
+df_try.loc[(df_try["Partner"].str.contains('No')) & (df_try["tenure"]>= 10) & (df_try["tenure"]<=70)]
+df_try.loc[(df_try["Partner"].str.contains('No')) & (df_try["tenure"]>= 10) & (df_try["tenure"]<=70)][['PhoneService','gender']]
+
+
+
+通过指定条件来filter数据
+https://www.jianshu.com/p/805f20ac6e06(关于筛选数据的好文，好作者)
+
+users[(users.age < 20) & (users.gender=='M’)]
+df[(df["monthlycharges"]>=-1) | (df["monthlycharges"]<=1)]
+drinks[(drinks.continent=='EU') & (drinks.wine_servings > 300)]
+注意 和，或，之间的区别
+users[(users.age < 10) | (users.age > 70)]
+df_pca[df_pca.States.str.contains('New')]
+
+
+
+通过指定条件来filter数据
+且
+只显示指定几个cols
+df [ [“Product”, “运输方式" ] ] [ df[ “单价”] > 5000  ]
+df.loc [ df[“单价”]>5000,( [ “Product”, “运输方式“ ) ]
+
+
+
+.drop( [ “col"] ) 一列
+.drop( [ ] ) 两行
+bus.drop(['date'], axis=1, inplace=True)
+bus.drop([114, 115], inplace=True, axis=0)
+
+
+
+.replace()
+
+.replace({0:'No',1:'Yes’})
+.replace( { } ) 可以实现多个目标一起替换
+df['TotalCharges']=df['TotalCharges'].replace(" ",np.nan)
+#df['TotalCharges'].replace(" ",np.nan,inplace=True) 应该也行
+（注意：dropna后 index会出现空缺，需要重置。 这列的type也可能需要.astype( )成float）
+df.columns= [i.replace(" ", "_") for i in df.columns]
+
+replace_cols = ['onlinesecurity', 'onlinebackup', 'deviceprotection’]
+for i in replace_cols:
+    df[i]=df[i].replace({'No internet service':'No'})
+df['seniorcitizen']=df['seniorcitizen'].replace({0:'No',1:'Yes'})
+
+
+
+如果需要以行或列来进行slicing，则需要考虑.loc() 和 .iloc() 函数
+loc函数：通过行索引 "Index" 中的具体值来取行数据（如取"Index"为"A"的行）
+iloc函数：通过行号来取行数据（如取第2行的数据）
+理论上：通过slicing出来的区域是可以集体赋值的，例如 data.iloc[ [ 0,1 ], [ ‘a’, ‘b’ ] ]=0 会使得整个区域内的elements都是0.
+
+提取data数据(筛选条件: A列中数字为0所在的行数据)
+提取data数据(多个筛选条件)
+注意 .loc[ ] 
+       .iloc[ ]
+
+data.loc[['a','b'],['A','B']]
+data.iloc[[0,1],[0,1]]
+    A    B
+a   0    1
+b   4   5
+data.loc[data['A']==0]
+
+   A B C D
+a  0 1 2 3
+data.loc[(data['A']==0) & (data['B']==2)]
+   A B C D
+a  0 1 2 3
+df.loc[(df["monthlycharges"]>=-1) | (df["monthlycharges"]<=1)]
+df.loc [ df[“单价”]>5000,( [ “Product”, “运输方式“ ) ]
+上面有一个通过普通功能筛选出来的例子
+rec[rec['id']<400].iloc[:,:3]
+rec[rec['id']<400].loc[:,('id','nickname’)]
+
+
+
+通过过滤filter某几个cols中的数据来slicing整个df
+
+hsq2=hsq1[(hsq1.age<100) & (hsq1.gender<3) & (hsq1.gender>0) ]
+users[(users.age < 20) & (users.gender=='M')]
+users[(users.age < 10) | (users.age > 70)]
+
+
+
+List
+
+
+
+复杂的list
+sofa=[{"joe":23,"wayne":34},['dog','cat'],"ufo",100]
+sofa[0]["joe”] 
+23
+sofa[1]
+['dog','cat']
+
+
+
+快速创造一个新list
+zip()
+a = ['a', 'b', 'c', 'd']
+z = ['z', 'y', 'x', 'w’]
+list(zip(a,z))
+
+[('a', 'z'), ('b', 'y'), ('c', 'x'), ('d', 'w')]
+list(zip(a,zip(z,b)))
+
+[('a', ('z', 'r')), ('b', ('y', 't')), ('c', ('x', 'd')), ('d', ('w', 'w'))]
+[list(i) for i in zip(a,z)]
+[['a', 'z'], ['b', 'y'], ['c', 'x'], ['d', 'w']]
+
+
+
+list的快速相加，行程新list
+a= [1,2]
+b=[3,4]
+c=[a+b]
+c
+[[1, 2, 3, 4]]
+
+
+
+.rename( ) 
+重新命名cols和index
+df.rename(columns={"A": "a", "B": "c"})
+df.rename(index={0: "x", 1: "y", 2: "z"})
+df.rename(str.lower, axis='columns')
+df.rename({1: 2, 2: 4}, axis='index')
+
+
+
+快速创造一个有index的list
+enumerate()
+zip()
+
+enumerate回产生（0，a）型结果，所以i[0],i[1]才能正确表达，且append只接受一个argument
+同上，但用list comprehension实现
+list(enumerate(zip(a,z)))
+[(0, ('a', 'z')), (1, ('b', 'y')), (2, ('c', 'x')), (3, ('d', 'w'))]
+enumerated=[]
+for i in enumerate(z):
+    enumerated.append((i[0],i[1]))
+enumerated
+
+[(0, 'z'), (1, 'y'), (2, 'x'), (3, 'w')]
+enumerated=[(i[0],i[1]) for i in enumerate(z)]
+[(0, 'z'), (1, 'y'), (2, 'x'), (3, 'w')]
+
+
+
+检查某个element是否在list或pd.series中
+'Moe' in names
+True
+df
+0    2.0
+1    5.0
+2    8.0
+3    NaN
+df.B.isin(['NaN'])
+0    False
+1    False
+2    False
+3     True
+
+
+
+给list中添加减新元素
+.extend()
+
+.append()
+
+
+.insert()
+
+del
+
+.remove()
+sofa=sofa+[“red”, “3m_long”,1099]
+[{'joe': 23, 'wayne': 34}, ['dog', 'cat'], 'ufo', 100, 'red', '3m_long', 1099]
+sofa.extend([“red”, “3m_long”,1099])
+sofa
+可以在list最后面添加elements
+sofa.append("new_one”)
+sofa
+[{'joe': 23, 'wayne': 34},
+ ['dog', 'cat'], 'ufo', 100,'red','3m_long',1099,
+ 'new_one']
+可以在指定位置添加element
+sofa.insert(5,'blue’)
+sofa
+ [{'joe': 23, 'wayne': 34},
+ ['dog', 'cat'],100,'red','3m_long','blue',1099,'new_one']
+del sofa[1:3]
+sofa
+[{'joe': 23, 'wayne': 34}, '3m_long', 'blue', 1099, 'new_one']
+sofa.remove(‘ufo’)
+sofa
+[{'joe': 23, 'wayne': 34},
+ ['dog', 'cat'],
+ 100,'red','3m_long',1099,
+ 'new_one']
+ 
+ 
+ 
+.sort()
+顺序排列纯数字的list
+num = [12,78,987,345,67,89,1002]
+num.sort()
+num
+[12, 67, 78, 89, 345, 987, 1002]
+users.sort_values('age', ascending=False)
+
+
+
+.reverse()
+逆之前顺序重排列list
+sofa.reverse()
+sofa
+[1099, '3m_long', 'red', 100, 'ufo', ['dog', 'cat'], {'joe': 23, 'wayne': 34}]
+
+
+
+.index()
+返回某个element的index
+sofa.index(100)
+3
+
+
+
+双数index的element显示出来
+enumerated=[(0, 'z'), (1, 'y'), (2, 'x'), (3, 'w')]
+index_nums=[i[0] for i in enumerated]
+index_nums[::2]
+[0, 2]
+
+
+
+单数index的element显示出来
+index_nums=[i[0] for i in enumerated]
+index_nums[1::2]
+[1, 3]
+
+
+
+index能被2整除的element显示出来
+[i[1] for i in enumerate(a) if i[0]%2==0 ]
+['a', 'c']
+
+
+
+.count()
+sofa.index(“ufo")
+查看list中ufo出现了多少次
+
+
+
+查看一个list中有多少.unique( ) 的值
+df['MultipleLines'].nunique()
+3
+unik=[] #值得收藏
+for i in df.columns: 
+    unik.append(df[i].unique())
+unik
+[array(['7590-VHVEG',  ..., '4801-JZAZL'], dtype=object),
+ array(['Female', 'Male'], dtype=object),
+ array([0, 1]),
+ array(['Yes', 'No'], dtype=object),
+ array(['No', 'Yes'], dtype=object)
+... ...
+
+
+
+Dictionary
+
+
+
+复杂的dictionary
+{'animals': ['dog', 'cat'],
+ 1: 2,
+ 'empty_dicts': {'a': {}, 'b': {}},
+ 57: 'Century_court',
+ 35: 168}
+mixture["animals"][1]
+“cat"
+mixture["empty_dicts"]["a"]
+{}
+mixture[1]
+2
+
+
+
+用zip()快速创造一个dict
+zip()
+
+.values() 可以提取dict中的values，将其变成一个list
+dict(zip(a,z))
+{'a': 'z', 'b': 'y', 'c': 'x', 'd': 'w'}
+dict(zip(a,zip(z,b)))
+{'a': ('z', 'r'), 'b': ('y', 't'), 'c': ('x', 'd'), 'd': ('w', 'w')}
+SF={'presidio': 94129,'soma': 94105,'marina': 94123,'sunset': 94122,'castro': 94114}
+list1 = SF.values()
+list2 = SF.keys()
+print(list1)
+print(list2)
+dict_values([94129, 94105, 94123, 94122, 94114])
+dict_keys(['presidio', 'soma', 'marina', 'sunset', 'castro'])
+new_dict={}
+for i,j in zip(list2,list1):
+    new_dict[i]=j
+new_dict
+{'presidio': 94129,
+ 'soma': 94105,
+ 'marina': 94123,
+ 'sunset': 94122,
+ 'castro': 94114}
+ 
+ 
+ 
+检查某个element是否在dict中
+'soma'in SF
+True
+增加dict中的element
+
+
+.update(another_dict)
+
+
+
+增加一个新dict
+SF["castro"]=94114
+SF
+{'sunset': 94122,
+ 'presidio': 94129,
+ 'soma': 94105,
+ 'marina': 94123,
+ 'castro': 94114}
+SF.update({"sunset":94122,'castro':94114})
+SF
+{'presidio': 94129,
+ 'soma': 94105,
+ 'marina': 94123,
+ 'sunset': 94122,
+ 'castro': 94114}
+ 
+ 
+ 
+删除dist中的element
+.pop()
+
+
+.clear()
+清除dict中所有内容
+SF.pop('castro’)
+SF
+{'sunset': 94122, 'presidio': 94129, 'soma': 94105, 'marina': 94123}
+del SF[’sunset’]
+SF
+{'presidio': 94129, 'soma': 94105, 'marina': 94123}
+SF.clear()
+SF
+{}
+
+
+
+.get()
+显示dict中的一个指定元素
+mixture.get(35)
+168
+mixture[35]
+168
+
+
+
+.keys()
+显示所有的key
+mixture.keys()
+dict_keys(['animals', 1, 'empty_dicts', 57, 35])
+
+
+
+.items() 将dict瞬间转化成一个list
+
+
+
+
+making two lists into a dictionary
+bio = dict(zip(friends,age))
+{'Curly': 23, 'Moe': 34, 'Larry': 24, 'Harry': 25, 'Sue': 24}
+把dict拆成list
+bio={'Curly': 23, 'Moe': 34, 'Larry': 24, 'Harry': 25, 'Sue': 24}
+
+age=[]
+for i in bio:
+    age.append(bio[i])
+print (age)
+[23, 34, 24, 25, 24]
+name=[]
+for j in bio:
+    name.append(j)
+print(name)
+['Curly', 'Moe', 'Larry', 'Harry', 'Sue']
+
+
+
+把dict拆成list
+.keys()
+
+mixture = {'animals': ['dog', 'cat'],
+ 1: 2,'empty_dicts': {'a': {}, 'b': {}},57: 'Century_court',35: 168}
+list(mixture.keys())
+或直接
+list(mixture) 
+['animals', 1, 'empty_dicts', 57, 35]
+
+
+
+把dict变成一个完整的list
+(注意：如果coding时 list( ) 功能突然不能使用，应该是无意中把list 这个内置功能给赋值了。需要重置kernel)
+list(mixture.items())
+快速把dict变成了一个list
+[('animals', ['dog', 'cat']),
+ (1, 2),
+ ('empty_dicts', {'a': {}, 'b': {}}),
+ (57, 'Century_court'),
+ (35, 168)]
+
+
+
+List Comprehension
+
+
+
+目标：给现有list中的element加1或减1
+for loop
+
+list comprehension
+
+function+map()
+
+.map()+lambda
+numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+num_plus_one=[]
+for i in numbers:
+    num_plus_one.append(i+1)
+print(num_plus_one)
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+num_plus_one=[i+1 for i in numbers]
+num_plus_one
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+def plus_one(x):
+    return x+1
+num_plus_one=map(plus_one,numbers) //此时内容还存在于map内存中,未以list形式存在
+num_plus_one=list(num_plus_one)
+num_plus_one
+
+[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+num_plus_one=map(lambda x:x-1, numbers)
+list(num_plus_one)
+[-1, 0, 1, 2, 3, 4, 5, 6, 7, 8]
+
+
+
+目标：求均值，之后按均值筛选，或筛选加处理
+求平均
+
+求平均
+
+
+list comprehesion中的
+if 条件
+(只有一个if条件时if放最后)
+n=[1, 2, 7, 21, 3, 1, 62, 3, 34, 12, 73, 44, 12, 11, 9]
+n_mean = sum(n)/len(n)
+print(n_mean)
+19.666666666666668
+import numpy as np
+n_numpy=np.array(n)
+n_mean=n_numpy.mean()
+19.666666666666668
+bigger_mean=[i>n_mean for i in n]
+bigger_mean
+上方是检查大小，下方是筛取
+bigger_mean=[i for i in n if i>n_mean]
+bigger_mean
+[False, False, False, True, False, False, True,
+ False, True, False, True,
+ True, False, False,False]
+[21, 62, 34, 73, 44]
+small_than_mean_100=[i*100 for i in n if i<n_mean]
+small_than_mean_100
+[100, 200, 700, 300, 100, 300, 1200, 1200, 1100, 900]
+
+
+
+目标：元素大于均值，新列表中显示1，否则显示0
+n_binary=[]
+counter=0
+for i in n:
+    if i >= n_mean:
+        n_binary.append(1)
+        counter+=1
+    else:
+        n_binary.append(0)
+print(n_binary)
+print(counter)
+
+[0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0]
+5
+n_binary = [1 if i >= n_mean else 0 for i in n]
+n_binary
+[0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0]
+
+
+
+目标：将list中的元素按一定条件加上labels
+if else 将之前的0，1变成1，0
+n_binary
+[0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 0]
+[1 if i==0 else 0 for i in n_binary]
+[1, 1, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1]
+
+
+
+目标：将list中的元素按一定条件加上labels
+如果等于1就label0，如果是0就label1，其余的是none
+
+多重if else 条件
+（多个if条件时if们放在for的前面）
+n = [0, 1, 0, 1, 2, 3, 5, 2, 1, 0]
+
+label=[]
+for i in n:
+    if i==1:
+        label.append(0)
+    elif i==0:
+        label.append(1)
+    else:
+        label.append(None)
+print(label)
+
+[0 if i==1 else 1 if i==0 else None for i in n]
+
+
+
+[1, 0, 1, 0, None, None, None, None, 0, 1]
+
+[1, 0, 1, 0, None, None, None, None, 0, 1]
+
+
+
+如果是0就label0，如果是1就label1，如果是2就label2，都不是就labelNone
+
+多重if else 条件
+label=[]
+for i in n:
+    if i==0:
+        label.append(0)
+    elif i==1:
+        label.append(1)
+    elif i==2:
+        label.append(2)
+    else:
+        label.append(None)
+print(label)
+
+[0 if i==0 else 1 if i==1 else 2 if i==2 else None for i in n]
+
+[0, 1, 0, 1, 2, None, None, 2, 1, 0]
+
+[0, 1, 0, 1, 2, None, None, 2, 1, 0]
+
+
+
+enumerate回产生（0，a）型结果，所以i[0],i[1]才能正确表达，且append只接受一个argument
+同上，但用list comprehension实现
+enumerated=[]
+for i in enumerate(z):
+    enumerated.append((i[0],i[1]))
+enumerated
+
+[(0, 'z'), (1, 'y'), (2, 'x'), (3, 'w')]
+enumerated=[(i[0],i[1]) for i in enumerate(z)]
+[(0, 'z'), (1, 'y'), (2, 'x'), (3, 'w')]
+index_nums=[i[0] for i in enumerated]
+index_nums
+[0, 1, 2, 3]
+
+
+
+目标：找出大于0的项，然后将他们的平方和平方根放入一个tuple，再全装入一个list中
+
+list comprehension 中再嵌套list comprehension
+n = [0, 1, 50, -23, -1, 75, -3]
+
+squares=[]
+for i in n:
+    if i>=0:
+        squares.append((i**2,i**0.5))
+squares
+[(0, 0.0), (1, 1.0), (2500, 7.0710678118654755), (5625, 8.660254037844387)]
+[(i**2,i**0.5) for i in [j for j in n if j>=0]]
+注意逻辑顺序的从内到外
+[(0, 0.0), (1, 1.0), (2500, 7.0710678118654755), (5625, 8.660254037844387)]
+
+
+
+目标：对比两个string lists中的元素，用辅音和元音组成新的list
+import string
+alphabet=string.ascii_uppercase
+.lower()
+.upper()
+xxx not in xxx
+
+此处为原答案。我还无法理解逻辑关系。
+import string
+alphabet=string.ascii_uppercase
+alphabet.lower()
+vowels = ‘aeiou'
+new_words=[]
+for j in alphabet:
+    for i in vowels:
+        if j.lower() not in vowels:
+            new_words.append(j+i)
+new_words
+(请注意，以上for loop中，for j 和 for i 的先后关系也同样决定这结果的顺序。特此注意)
+['Ba','Be','Bi','Bo','Bu',
+ 'Ca','Ce','Ci','Co','Cu’,……,Yi','Yo','Yu','Za','Ze','Zi','Zo','Zu']
+
+syllables = [s for syls in [[c+v for v in vowels]
+                            for c in [x for x in alphabet if x not in vowels]] for s in syls]
+syllables
+['Ba','Be','Bi','Bo','Bu',
+ 'Ca','Ce','Ci','Co','Cu’,……,Yi','Yo','Yu','Za','Ze','Zi','Zo','Zu']
+ 
+ 
+目标：list中的元素，是元音的变成v，是辅音的变成c，其余变成？
+
+用list comprehension 快速把一个str展开
+
+注意：之前版本中list(“aeiou”)可返回['a', 'e', 'i', 'o', 'u’]。但现在不行了。所以要注意i 所指代的element在各个list中是否是同级别的
+
+import string
+alphabet = string.ascii_lowercase
+new_alphabet=[]
+for i in alphabet:
+    for j in i:
+        new_alphabet.append(j)
+new_alphabet
+['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+效果同上
+alph = [i for i in alph]
+alph
+['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+vowels =['a','e','i','o','u']
+characters = ['a', 'f', None, 'k', 'l', '1', 12, 'e', 'e', -1, 'i', 'b', 'p']
+characters
+['a', 'f', None, 'k', 'l', '1', 12, 'e', 'e', -1, 'i', 'b', 'p']
+new_chara=[]
+for i in characters:
+    if i in vowels:
+        new_chara.append('v')
+    elif i not in vowels and i in new_alphabet:
+        new_chara.append('c')
+    else:
+        new_chara.append("?")
+new_chara
+['v', 'c', '?', 'c', 'c', '?', '?', 'v', 'v', '?', 'v', 'c', 'c']
+效果同上
+['v' if i in vowels else 'c' if i not in vowels and i in new_alphabet
+else '?' for i in characters]
+['v', 'c', '?', 'c', 'c', '?', '?', 'v', 'v', '?', 'v', 'c', 'c']
+
+
+
+Dictionary Comprehensions
+
+
+
+keys = ['dog', 'cat', 'bird', 'horse’]
+
+ord 返回单个字母在系统里对应的integer
+ord('b')
+
+
+
+目标：以list中的单词为key，item为每个字母对应的integer
+word_dict={j:[ord(i) for i in j] for j in keys}
+word_dict
+{'dog': [100, 111, 103],
+ 'cat': [99, 97, 116],
+ 'bird': [98, 105, 114, 100],
+ 'horse': [104, 111, 114, 115, 101]}
+ 
+ 
+ 
+目标：以list中的单词为key，item为由每个单词中元音组成的list
+word_dict_II={j:[i for i in j if i in vowels] for j in keys}
+word_dict_II
+{'dog': ['o'], 'cat': ['a'], 'bird': ['i'], 'horse': ['o', 'e']}
+word_dict_II={}
+for j in keys:
+    for i in j:
+        if i in vowels:
+            word_dict_II[j]=[i]
+word_dict_II
+用for loop想复刻上面这个dict comprehension的过程,但没有成功,缺了点什么（已自行解决，如下）
+{'dog': ['o'], 'cat': ['a'], 'bird': ['i'], 'horse': ['e']}
+word_dict_II={}
+for words in keys:
+    lists=[]  //loop每一个单词时建一个list
+    for letters in words:
+        if letters in vowels:
+            lists.append(letters)
+    word_dict_II[words]=lists  //单词内部loop结束后放入dict对应的key里面
+word_dict_II
+
+{'dog': ['o'], 'cat': ['a'], 'bird': ['i'], 'horse': ['o', 'e']}
+
+
+
+目标：把单词都变成大写字母
+strings = ['black', 'Yellow', 'ReD', 'GreeN', 'BLUe']
+upper_str=[]
+for i in strings:
+    upper_str.append(i.upper())
+upper_str
+['BLACK', 'YELLOW', 'RED', 'GREEN', 'BLUE']
+[i.upper() for i in strings]
+['BLACK', 'YELLOW', 'RED', 'GREEN', 'BLUE']
+upper_str=[]
+for i in strings:
+    words=[]
+    for j in i:
+        words.append(j.upper())
+    upper_str.append(words)
+（注意处理对象是哪一个，即i ，j到底代表什么）
+[['B', 'L', 'A', 'C', 'K'],
+ ['Y', 'E', 'L', 'L', 'O', 'W'],
+ ['R', 'E', 'D'],
+ ['G', 'R', 'E', 'E', 'N'],
+ ['B', 'L', 'U', 'E']]
+ 
+ 
+ 
+目标：将数字中的单双数分离
+
+i%2 != 0 
+numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+even_num=[i for i in numbers if i%2==0]
+even_num
+（注意：list comprehension的局限性，一次只能返回一个list。而下方的for loop则可以一次生成多个lists）
+[2, 4, 6, 8, 10]
+even_nums=[]
+odd_nums=[]
+for i in numbers:
+    if i%2==0:
+        even_nums.append(i)
+    if i%2!=0:
+        odd_nums.append(i)
+print(even_nums)
+print(odd_nums)
+[2, 4, 6, 8, 10]
+[1, 3, 5, 7, 9]
+
+
+
+Plotting
+
+
+
+热图
+sns.heatmap(X.corr())
+plt.show()
+
+Bar图
+data.groupby('alchemy_category')[['label']].mean().plot(
+    kind='bar', y='label', rot=45, figsize=(12, 4), legend=None)
+plt.ylabel('label')
+plt.show()
+g = sns.barplot(x='is_news', y='label', data=data)
+plt.show()
+
+sns.catplot(x='alchemy_category', y='label',
+            data=data, kind='bar', aspect=3
+            ).set_xticklabels(rotation=45, horizontalalignment='right',
+                              fontsize=20).set_yticklabels(fontsize=20)
+plt.xlabel('alchemy_category', fontsize=24)
+plt.ylabel('label', fontsize=24)
+plt.show()
+
+饼图
+fig,ax=plt.subplots(figsize=(10,8)) 
+ax.pie(gender_attrition, autopct='%.2f')
+
+
+
+String 函数
+
+
+
+https://blog.csdn.net/weixin_43965642/article/details/84988578
+
+.capitalize()，将字符串第一个首字母大写（其它都小写）
+.title()，将字符串中所有单词首字母大写（其它都小写）
+ .lower()转换所有大写字符为小写
+ .upper()转换所有小写字符为大写
+
+.replace(str1,str2 [,n] )，将字符串中所有的str1替换为str2，n可指定最多替换的次数
+
+ .split(str[,n]),以str为分隔符（分割后丢失），将字符串分割为多个字符串，n可指定最多的分割次数
+
+.startswith(str)，检查字符串是否以指定字符开头，是则返回Turn，否则返回False
+for col in [c for c in hsq.columns if c.startswith('Q')]:
+    hsq[col] = hsq[col].map(lambda x: np.nan if x == -1 else x)
+.endswith(str)，检查字符串是否以指定字符结尾，是则返回Turn，否则为False
+
+.isalpha()，检查字符串是否都是字母，是返回Turn，否则返回False
+.isdigit()，检查字符串是否只包含数字，是返回Turn，否则返回False
+
+.lstrip()，删除左侧的空白字符
+.rstrip()，删除末尾的空白字符
+ .strip()，删除两端的空白字符
+
+
