@@ -26,19 +26,19 @@ As one of the funding members, in order to find some answers. I got the permissi
 
 
 #### Navigating through the repository:
-#### [Data_dictionary_and_sources](https://github.com/paxton615/Linguapal-Analysis/tree/master/data_dictionary_and_sources)
+#### 1.[Data_dictionary_and_sources](https://github.com/paxton615/Linguapal-Analysis/tree/master/data_dictionary_and_sources)
 
 
-#### [Observing_and_EDA_data](https://github.com/paxton615/Linguapal-Analysis/tree/master/Observing_and_EDA)
+#### 2.[Observing_and_EDA_data](https://github.com/paxton615/Linguapal-Analysis/tree/master/Observing_and_EDA)
 
  
-#### [Merging_and_preparing_data](https://github.com/paxton615/Linguapal-Analysis/tree/master/Merging_and_preparing_data)
+#### 3.[Merging_and_preparing_data](https://github.com/paxton615/Linguapal-Analysis/tree/master/Merging_and_preparing_data)
 
 
-#### [Modelling_and_the_results](https://github.com/paxton615/Linguapal-Analysis/tree/master/Modelling)
+#### 4.[Modelling_and_the_results](https://github.com/paxton615/Linguapal-Analysis/tree/master/Modelling)
 
 
-#### [Findings_and_Conclusions](https://github.com/paxton615/Linguapal-Analysis/tree/master/Findings_and_conclusions)
+#### 5.[Findings_and_Conclusions](https://github.com/paxton615/Linguapal-Analysis/tree/master/Findings_and_conclusions)
 
 
 
