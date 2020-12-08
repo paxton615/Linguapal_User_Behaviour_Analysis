@@ -41,5 +41,13 @@ As one of the funding members, in order to find some answers. I got the permissi
 #### 5.[Findings_and_Conclusions](https://github.com/paxton615/Linguapal-Analysis/tree/master/Findings_and_conclusions)
 
 
+Some findings:
+
+The most popular time of app using is between 22:00 - 23:00 
+<img src="pictures/time_of_app_using.png" width="600">
+
+Huge access times bring huge favrioute times. It means the qualities of our videos are very well maintained.
+<img src="pictures/traffic_to_fav.png" width="600"> 
+
 
 
